@@ -1,24 +1,9 @@
+// lib/screens/profile_page.dart
+import 'package:ecfc/screens/auth/signin_page.dart';
+import 'package:ecfc/screens/auth/signup_page.dart';
+import 'package:ecfc/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-// You'll likely want to move your authentication logic to a separate service.
-// For this example, we'll keep it simple.
-class AuthService {
-  bool _isLoggedIn = false; // Simulate login state
-
-  bool get isLoggedIn => _isLoggedIn;
-
-  Future<void> login(String email, String password) async {
-    // Simulate network request
-    await Future.delayed(const Duration(seconds: 1));
-    // In a real app, you would validate credentials here
-    _isLoggedIn = true;
-  }
-
-  Future<void> logout() async {
-    await Future.delayed(const Duration(seconds: 1));
-    _isLoggedIn = false;
-  }
-}
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,109 +13,352 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final AuthService _authService = AuthService(); // Instantiate your auth service
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
+  String? _errorMessage;
 
-  // Method to handle login
-  Future<void> _login() async {
+  Future<void> _signInWithGoogle() async {
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
-    // In a real app, you'd get email/password from TextFormFields
-    await _authService.login("test@example.com", "password");
-    setState(() {
-      _isLoading = false;
-    });
-  }
 
-  // Method to handle logout
-  Future<void> _logout() async {
-    setState(() {
-      _isLoading = true;
-    });
-    await _authService.logout();
-    setState(() {
-      _isLoading = false;
-    });
+    try {
+      UserCredential? userCredential = await _authService.signInWithGoogle();
+      if (userCredential != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signed in with Google!')),
+        );
+      }
+    } catch (e) {
+      setState(() => _errorMessage = "Google Sign-In failed. Try again.");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: const Text('Profile'),
         actions: [
-          if (_authService.isLoggedIn)
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: _isLoading ? null : _logout,
-            ),
+          StreamBuilder<User?>(
+            stream: _authService.authStateChanges,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () async {
+                    await _authService.signOut();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Successfully signed out')),
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
-      body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator()
-            : _authService.isLoggedIn
-            ? _buildProfileView()
-            : _buildLoginView(),
+      body: StreamBuilder<User?>(
+        stream: _authService.authStateChanges,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            User? user = snapshot.data;
+            return _buildUserProfile(context, user);
+          } else {
+            return _buildAuthOptions(context);
+          }
+        },
       ),
     );
   }
 
-  Widget _buildProfileView() {
-    return const Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Icon(Icons.person, size: 80),
-        SizedBox(height: 16),
-        Text(
-          "Welcome, User!", // Replace with actual user data
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 8),
-        Text(
-          "user@example.com", // Replace with actual user data
-          style: TextStyle(fontSize: 16),
-        ),
-        SizedBox(height: 20),
-        // Add more profile information here
-      ],
+  Widget _buildUserProfile(BuildContext context, User? user) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Welcome!', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 10),
+          if (user?.email != null)
+            Text('Email: ${user!.email}',
+                style: Theme.of(context).textTheme.titleMedium),
+          if (user?.uid != null)
+            Text('UID: ${user!.uid}',
+                style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 30),
+        ],
+      ),
     );
   }
 
-  Widget _buildLoginView() {
-    // You would typically have TextFormField widgets for email and password here
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        const Text(
-          "Please Log In",
-          style: TextStyle(fontSize: 20),
+  Widget _buildAuthOptions(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            // Sign In Button
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignInPage()),
+                );
+              },
+              child: const Text('Sign In', style: TextStyle(fontSize: 18)),
+            ),
+
+            const SizedBox(height: 15),
+
+            // Google Sign In Button
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+              onPressed: _isLoading ? null : _signInWithGoogle,
+              icon: Image.asset(
+                'assets/google_logo.png',
+                height: 24,
+                width: 24,
+              ),
+              label: const Text(
+                'Sign in with Google',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Sign Up Button
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpPage()),
+                );
+              },
+              child:
+              const Text('Create Account', style: TextStyle(fontSize: 18)),
+            ),
+
+            const SizedBox(height: 30),
+
+            if (_errorMessage != null)
+              Text(
+                _errorMessage!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+
+            const SizedBox(height: 20),
+
+            // Bottom Text Link
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpPage()),
+                );
+              },
+              child: Text(
+                "Don't have an account? Sign Up",
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _login,
-          child: const Text("Login"),
-        ),
-        // Add TextFormFields for email and password, and a proper form
-      ],
+      ),
     );
   }
-}// import 'package:flutter/material.dart';
+}
+
+
+
+
+
+// // lib/screens/profile_page.dart
+// import 'package:ecfc/screens/auth/signin_page.dart'; // We'll create this
+// import 'package:ecfc/screens/auth/signup_page.dart'; // We'll create this
+// import 'package:ecfc/services/auth_service.dart'; // Import your AuthService
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:flutter/material.dart';
 //
-// class ProfilePage extends StatelessWidget {
+// class ProfilePage extends StatefulWidget {
 //   const ProfilePage({super.key});
+//
+//   @override
+//   State<ProfilePage> createState() => _ProfilePageState();
+// }
+//
+// class _ProfilePageState extends State<ProfilePage> {
+//   final AuthService _authService = AuthService();
 //
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
-//       appBar: AppBar(title: const Text("My Profile")),
-//       body: const Center(
-//         child: Text(
-//           "This is the Profile Page",
-//           style: TextStyle(fontSize: 18),
+//       appBar: AppBar(
+//         title: const Text('Profile'),
+//         actions: [
+//           // Add a sign-out button if the user is logged in
+//           StreamBuilder<User?>(
+//             stream: _authService.authStateChanges,
+//             builder: (context, snapshot) {
+//               if (snapshot.hasData) { // User is logged in
+//                 return IconButton(
+//                   icon: const Icon(Icons.logout),
+//                   onPressed: () async {
+//                     await _authService.signOut();
+//                     // Optionally navigate to home or show a message
+//                     ScaffoldMessenger.of(context).showSnackBar(
+//                       const SnackBar(content: Text('Successfully signed out')),
+//                     );
+//                   },
+//                 );
+//               }
+//               return const SizedBox.shrink(); // No button if not logged in
+//             },
+//           ),
+//         ],
+//       ),
+//       body: StreamBuilder<User?>(
+//         stream: _authService.authStateChanges,
+//         builder: (context, snapshot) {
+//           if (snapshot.connectionState == ConnectionState.waiting) {
+//             return const Center(child: CircularProgressIndicator());
+//           } else if (snapshot.hasError) {
+//             return Center(child: Text('Error: ${snapshot.error}'));
+//           } else if (snapshot.hasData) {
+//             // User is logged in - Show profile information
+//             User? user = snapshot.data;
+//             return _buildUserProfile(context, user);
+//           } else {
+//             // User is not logged in - Show Sign In / Sign Up options
+//             return _buildAuthOptions(context);
+//           }
+//         },
+//       ),
+//     );
+//   }
+//
+//   Widget _buildUserProfile(BuildContext context, User? user) {
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           Text(
+//             'Welcome!',
+//             style: Theme
+//                 .of(context)
+//                 .textTheme
+//                 .headlineSmall,
+//           ),
+//           const SizedBox(height: 10),
+//           if (user?.email != null)
+//             Text(
+//               'Email: ${user!.email}',
+//               style: Theme
+//                   .of(context)
+//                   .textTheme
+//                   .titleMedium,
+//             ),
+//           if (user?.uid != null)
+//             Text(
+//               'UID: ${user!.uid}',
+//               style: Theme
+//                   .of(context)
+//                   .textTheme
+//                   .bodySmall,
+//             ),
+//           const SizedBox(height: 30),
+//           // You can add more profile details or edit profile button here
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildAuthOptions(BuildContext context) {
+//     return Center(
+//       child: Padding(
+//         padding: const EdgeInsets.all(20.0),
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           crossAxisAlignment: CrossAxisAlignment.stretch,
+//           children: <Widget>[
+//             ElevatedButton(
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: Theme
+//                     .of(context)
+//                     .colorScheme
+//                     .primary,
+//                 foregroundColor: Theme
+//                     .of(context)
+//                     .colorScheme
+//                     .onPrimary,
+//                 padding: const EdgeInsets.symmetric(vertical: 15),
+//               ),
+//               child: const Text('Sign In', style: TextStyle(fontSize: 18)),
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(builder: (context) => const SignInPage()),
+//                 );
+//               },
+//             ),
+//             const SizedBox(height: 20),
+//             OutlinedButton(
+//               style: OutlinedButton.styleFrom(
+//                 side: BorderSide(color: Theme
+//                     .of(context)
+//                     .colorScheme
+//                     .primary),
+//                 foregroundColor: Theme
+//                     .of(context)
+//                     .colorScheme
+//                     .primary,
+//                 padding: const EdgeInsets.symmetric(vertical: 15),
+//               ),
+//               child: const Text(
+//                   'Create Account', style: TextStyle(fontSize: 18)),
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(builder: (context) => const SignUpPage()),
+//                 );
+//               },
+//             ),
+//             const SizedBox(height: 30),
+//             Text(
+//               'Access your saved items, cart, and more by signing in or creating an account.',
+//               textAlign: TextAlign.center,
+//               style: Theme
+//                   .of(context)
+//                   .textTheme
+//                   .bodySmall,
+//             ),
+//           ],
 //         ),
 //       ),
 //     );
 //   }
 // }
+//
