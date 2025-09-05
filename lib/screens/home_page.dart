@@ -4,6 +4,8 @@
 
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:ecfc/screens/cart_page.dart';
+import 'package:ecfc/screens/wishlist_page.dart';
 import 'package:flutter/material.dart';
 
 // These three files should live in the same folder: lib/screens/
@@ -79,6 +81,17 @@ class _CfcHomePageState extends State<CfcHomePage>
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.shopping_cart_rounded),
+                title: const Text('Cart'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CartPage()),
+                  );
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.login),
                 title: const Text('Logout'),
                 onTap: () {
@@ -89,6 +102,18 @@ class _CfcHomePageState extends State<CfcHomePage>
                   );
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.favorite, color: Colors.red),
+                title: const Text('Wishlist'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WishlistPage()),
+                  );
+                },
+              ),
+
             ],
           ),
         ),

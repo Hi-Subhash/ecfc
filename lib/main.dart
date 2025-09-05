@@ -1,18 +1,28 @@
 // If you want to start here for non-auth users
 import 'package:ecfc/services/auth_service.dart';
+import 'package:ecfc/services/wishlist_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'screens/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-
+import 'package:provider/provider.dart';
+import 'services/cart_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const CfcApp());
+  runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => CartService()),
+          ChangeNotifierProvider(create: (_) => WishlistService()),
+        ],
+          child: const CfcApp()
+      ),
+  );
 }
 
 class CfcApp extends StatelessWidget {

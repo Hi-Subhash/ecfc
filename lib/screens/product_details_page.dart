@@ -1,6 +1,10 @@
 // lib/screens/product_details_page.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/cart_service.dart';
+import 'cart_page.dart';
+import '../services/wishlist_service.dart';
 
 class ProductDetailsPage extends StatelessWidget {
   final String title;
@@ -170,6 +174,12 @@ class ProductDetailsPage extends StatelessWidget {
                 ),
                 onPressed: () {
                   // TODO: add add-to-cart logic (Provider/Firebase)
+                  final cart = Provider.of<CartService>(context, listen: false);
+                  cart.addItem({
+                    "title": title,
+                    "price": price,
+                    "image": image,
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Added to Cart!")),
                   );
@@ -177,15 +187,38 @@ class ProductDetailsPage extends StatelessWidget {
                 child: const Text("Add to Cart", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
-            const SizedBox(width: 12),
             IconButton(
+              icon: const Icon(Icons.shopping_cart),
               onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CartPage()),
+                );
+              },
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                final wishlist = Provider.of<WishlistService>(context, listen: false);
+                wishlist.addItem({
+                  "title": title,
+                  "price": price,
+                  "image": image,
+                  "description": description,
+                });
                 // TODO: add wishlist logic
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Added to Wishlist!")),
                 );
               },
-              icon: const Icon(Icons.favorite_border, color: Colors.white),
+              icon: const Icon(Icons.favorite_border, color: Colors.red),
+              label: const Text("Wishlist"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
             ),
           ],
         ),
