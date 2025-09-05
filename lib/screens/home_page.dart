@@ -464,7 +464,7 @@ class _FeaturedCard extends StatelessWidget {
 
 // ---------- Reusable "Glass" widgets ----------
 class _GlassCard extends StatelessWidget {
-  const _GlassCard({super.key, this.child, this.height});
+  const _GlassCard({this.child, this.height});
   final Widget? child;
   final double? height;
 

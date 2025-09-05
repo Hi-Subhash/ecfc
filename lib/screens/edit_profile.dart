@@ -85,7 +85,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const SizedBox(height: 15),
 
               DropdownButtonFormField<String>(
-                value: _gender,
+                initialValue: _gender,
                 items: const ['Male', 'Female', 'Other']
                     .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                     .toList(),

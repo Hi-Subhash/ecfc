@@ -1,4 +1,4 @@
-import 'package:ecfc/screens/auth/signin_page.dart'; // If you want to start here for non-auth users
+// If you want to start here for non-auth users
 import 'package:ecfc/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

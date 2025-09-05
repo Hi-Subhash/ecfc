@@ -25,10 +25,10 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       print("Firebase Auth Exception (Sign Up): ${e.message}");
-      throw e;
+      rethrow;
     } catch (e) {
       print("Unexpected error (Sign Up): $e");
-      throw e;
+      rethrow;
     }
   }
 
@@ -44,10 +44,10 @@ class AuthService {
       return userCredential;
     } on FirebaseAuthException catch (e) {
       print("Firebase Auth Exception (Sign In): ${e.message}");
-      throw e;
+      rethrow;
     } catch (e) {
       print("Unexpected error (Sign In): $e");
-      throw e;
+      rethrow;
     }
   }
 
@@ -73,7 +73,7 @@ class AuthService {
       return await _firebaseAuth.signInWithCredential(credential);
     } catch (e) {
       print("Google Sign-In error: $e");
-      throw e;
+      rethrow;
     }
   }
 
