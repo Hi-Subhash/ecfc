@@ -5,10 +5,14 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:ecfc/screens/cart_page.dart';
+import 'package:ecfc/screens/shop_page.dart';
+import 'package:ecfc/widgets/bottom_nav.dart';
 import 'package:ecfc/screens/wishlist_page.dart';
 import 'package:flutter/material.dart';
 
 // These three files should live in the same folder: lib/screens/
+import '../widgets/bottom_nav.dart';
+import 'design_page.dart';
 import 'profile_page.dart';
 import 'notifications_page.dart';
 import 'category_page.dart';
@@ -25,6 +29,21 @@ class CfcHomePage extends StatefulWidget {
 class _CfcHomePageState extends State<CfcHomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const Center(child: Text("🏠 Home", style: TextStyle(fontSize: 22))),
+    const ShopPage(),
+    const DesignPage(),
+    const ProfilePage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
 
   @override
   void initState() {
@@ -195,6 +214,11 @@ class _CfcHomePageState extends State<CfcHomePage>
             ),
           ),
         ],
+      ),
+      // ✅ add your bottom nav here
+      bottomNavigationBar: BottomNav(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }
