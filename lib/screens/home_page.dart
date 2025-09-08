@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:ecfc/screens/cart_page.dart';
 import 'package:ecfc/screens/shop_page.dart';
+import 'package:ecfc/services/auth_service.dart';
 import 'package:ecfc/widgets/bottom_nav.dart';
 import 'package:ecfc/screens/wishlist_page.dart';
 import 'package:flutter/material.dart';
@@ -113,10 +114,36 @@ class _CfcHomePageState extends State<CfcHomePage>
                 leading: const Icon(Icons.login),
                 title: const Text('Logout'),
                 onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const NotificationsPage()),
+                  Navigator.pop(context); // Close the modal bottom sheet first
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext dialogContext) {
+                      return AlertDialog(
+                        title: const Text('Confirm Logout'),
+                        content: const Text('Are you sure you want to sign out?'),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(); // Close the dialog
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('Logout'),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(); // Close the dialog
+                              AuthService().signOut(); // Sign out the user
+                              // Optionally, navigate to a login screen or home screen after logout
+                              // For example, if you have a SignInPage:
+                              // Navigator.of(context).pushAndRemoveUntil(
+                              //   MaterialPageRoute(builder: (context) => const SignInPage()),
+                              //   (Route<dynamic> route) => false,
+                              // );
+                            },
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -611,7 +638,7 @@ class _LiquidBackgroundPainter extends CustomPainter {
     final gradient = const RadialGradient(
       center: Alignment(-0.6, -0.6),
       radius: 1.2,
-      colors: [Color(0xFF0B0B14), Color(0xFF0B0B14)],
+      colors: [Color(0xFF0B0B14), Color(0xFF1F1F2E)], // Updated gradient colors
       stops: [0.0, 1.0],
     );
     canvas.drawRect(

@@ -39,6 +39,47 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _confirmSignOut() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirm Logout'),
+          content: const Text('Are you sure you want to sign out?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false); // Close the dialog, return false
+              },
+            ),
+            TextButton(
+              child: const Text('Logout'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true); // Close the dialog, return true
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      await _authService.signOut();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Successfully signed out')),
+        );
+        // Optionally, navigate to a login screen or home screen after logout
+        // For example, if you have a SignInPage:
+        // Navigator.of(context).pushAndRemoveUntil(
+        //   MaterialPageRoute(builder: (context) => const SignInPage()),
+        //   (Route<dynamic> route) => false,
+        // );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,12 +92,7 @@ class _ProfilePageState extends State<ProfilePage> {
               if (snapshot.hasData) {
                 return IconButton(
                   icon: const Icon(Icons.logout),
-                  onPressed: () async {
-                    await _authService.signOut();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Successfully signed out')),
-                    );
-                  },
+                  onPressed: _confirmSignOut, // Updated here
                 );
               }
               return const SizedBox.shrink();
@@ -105,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   backgroundImage: data?['photoUrl'] != null
                       ? NetworkImage(data!['photoUrl'])
                       : const AssetImage('assets/default_avatar.png')
-                  as ImageProvider,
+                          as ImageProvider,
                 ),
               ),
               const SizedBox(height: 20),
