@@ -11,7 +11,6 @@ import 'package:ecfc/screens/wishlist_page.dart';
 import 'package:flutter/material.dart';
 
 // These three files should live in the same folder: lib/screens/
-import '../widgets/bottom_nav.dart';
 import 'design_page.dart';
 import 'profile_page.dart';
 import 'notifications_page.dart';
@@ -177,41 +176,12 @@ class _CfcHomePageState extends State<CfcHomePage>
           ),
 
           // 3) Page content on a frosted glass container
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _GlassAppBar(onMenuTap: _openMenu),
-                  const SizedBox(height: 8),
 
-                  // Search + quick actions
-                  const _GlassSearchBar(),
-                  const SizedBox(height: 8),
-
-                  // Promo / CTA Card (glass)
-                  const _PromoCard(),
-                  const SizedBox(height: 8),
-
-                  // Category chips (glass)
-                  _CategoryChips(
-                    onTapCategory: (cat) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CategoryPage(category: cat),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Featured carousel
-                  const Expanded(child: _FeaturedCarousel()),
-                ],
-              ),
-            ),
+          // ✅ switch body depending on tab
+          Positioned.fill(
+            child: _selectedIndex == 0
+                ? _buildHomeContent(context) // your big glass home page
+                : _pages[_selectedIndex],    // Shop, Design, Profile
           ),
         ],
       ),
@@ -222,6 +192,37 @@ class _CfcHomePageState extends State<CfcHomePage>
       ),
     );
   }
+  Widget _buildHomeContent(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _GlassAppBar(onMenuTap: _openMenu),
+            const SizedBox(height: 8),
+            const _GlassSearchBar(),
+            const SizedBox(height: 8),
+            const _PromoCard(),
+            const SizedBox(height: 8),
+            _CategoryChips(
+              onTapCategory: (cat) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CategoryPage(category: cat),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            const Expanded(child: _FeaturedCarousel()),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
 class _GlassAppBar extends StatelessWidget {
@@ -280,7 +281,7 @@ class _GlassSearchBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2                  ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5                  ),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.06),
             borderRadius: BorderRadius.circular(24),
@@ -479,13 +480,14 @@ class _FeaturedCard extends StatelessWidget {
                     style: TextStyle(color: Colors.white.withOpacity(0.85)),
                   ),
                   const SizedBox(height: 12),
-                  Column(
+                  Wrap(
+                    spacing: 8, // ✅ horizontal space
+                    runSpacing: 6, // ✅ vertical space if wrapped
                     children: [
                       FilledButton.tonal(
                         onPressed: () {},
                         child: const Text('Preview 3D'),
                       ),
-                      const SizedBox(width: 8),
                       OutlinedButton(
                         onPressed: () {},
                         child: const Text('Details'),
