@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class DesignPage extends StatefulWidget {
   const DesignPage({super.key});
@@ -10,7 +11,7 @@ class DesignPage extends StatefulWidget {
 class _DesignPageState extends State<DesignPage> {
   String? _garmentType;
   Color _primaryColor = Colors.blue; // Default color
-  String? _selectedFabricType; // Added for fabric dropdown
+  String? _selectedFabricType;
   String? _fabricDescription;
   String? _patternDescription;
   String? _textToAdd;
@@ -21,7 +22,6 @@ class _DesignPageState extends State<DesignPage> {
 
   // Options for dropdowns
   final List<String> _garmentTypeOptions = ['T-Shirt', 'Dress', 'Hoodie', 'Trousers', 'Skirt'];
-  // Updated fabric options list
   final List<String> _fabricTypeOptions = ['Cotton', 'Denim', 'Silk', 'Leather', 'Wool', 'Velvet', 'Other'];
   final List<String> _garmentViewOptions = ['Front View', 'Back View', 'Side View', 'On a Mannequin', 'Flat Lay'];
 
@@ -51,7 +51,7 @@ class _DesignPageState extends State<DesignPage> {
       _formKey.currentState!.save();
       print('Generating image with the following parameters:');
       print('Garment Type: $_garmentType');
-      print('Selected Base Fabric: ${_selectedFabricType ?? 'Not Specified'}'); // Added
+      print('Selected Base Fabric: ${_selectedFabricType ?? 'Not Specified'}');
       print('Primary Color: $_primaryColor');
       print('Fabric Description: $_fabricDescription');
       print('Pattern Description: $_patternDescription');
@@ -63,6 +63,55 @@ class _DesignPageState extends State<DesignPage> {
         const SnackBar(content: Text('Image generation request sent (simulated)')),
       );
     }
+  }
+
+  void _openColorPicker() {
+    Color pickerColor = _primaryColor; // Temporary color for the picker
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pick a color'),
+          backgroundColor: const Color(0xFF2C2C2C), // Dialog background
+          titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: pickerColor,
+              onColorChanged: (Color color) {
+                pickerColor = color; // Update temporary color
+              },
+              // Optional: customize the picker
+              // showLabel: true,
+              // pickerAreaHeightPercent: 0.8,
+              // enableAlpha: false, // Depending on if you want alpha
+              // displayThumbColor: true,
+              // paletteType: PaletteType.hsv,
+              // colorPickerWidth: 300.0,
+              // pickerAreaBorderRadius: const BorderRadius.only(
+              //   topLeft: Radius.circular(2.0),
+              //   topRight: Radius.circular(2.0),
+              // ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurpleAccent),
+              child: const Text('Select', style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                setState(() => _primaryColor = pickerColor);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -126,7 +175,6 @@ class _DesignPageState extends State<DesignPage> {
                     _selectedFabricType = newValue;
                   });
                 },
-                // No validator for optional field
                 onSaved: (value) => _selectedFabricType = value,
               ),
               const SizedBox(height: 16),
@@ -156,12 +204,21 @@ class _DesignPageState extends State<DesignPage> {
               ),
               const SizedBox(height: 16),
 
-              // Primary Color (Simple placeholder - a real app would use a color picker)
-              Text('Primary Color: (Placeholder - Tap to change - Not implemented)', style: TextStyle(color: Colors.white70)),
-              Container(
-                height: 50,
-                color: _primaryColor,
-                margin: const EdgeInsets.symmetric(vertical: 8.0),
+              // Primary Color Picker
+              ListTile(
+                title: const Text('Primary Color', style: TextStyle(color: Colors.white70)),
+                trailing: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: _primaryColor,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.white38),
+                  ),
+                ),
+                onTap: _openColorPicker,
+                tileColor: const Color(0xFF2C2C2C), // To match input field background
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
               ),
               const SizedBox(height: 16),
 
