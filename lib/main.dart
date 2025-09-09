@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'services/cart_service.dart';
+import 'screens/shop_page.dart'; // API version
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

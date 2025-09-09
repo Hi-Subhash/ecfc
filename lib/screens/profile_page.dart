@@ -80,6 +80,20 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> createUserProfile(User user) async {
+    final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    await userDoc.set({
+      "name": user.displayName ?? "",
+      "email": user.email ?? "",
+      "photoUrl": user.photoURL ?? "",
+      "gender": "",
+      "dob": "",
+      "address": "",
+    }, SetOptions(merge: true));
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
