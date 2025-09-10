@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firestore_product_service.dart';
 import 'add_product_page.dart';
 import 'product_details_page.dart';
+import '../models/product_model.dart'; // 👈 Product model
 
 class ShopPage extends StatelessWidget {
   const ShopPage({super.key});
@@ -13,17 +13,17 @@ class ShopPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Shop (Firestore)")),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: firestoreService.getProducts(),
+      body: StreamBuilder<List<Product>>( // 👈 FIX: use List<Product>
+        stream: firestoreService.getProducts(), // already returns List<Product>
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text("No Products Found"));
           }
 
-          final products = snapshot.data!.docs;
+          final products = snapshot.data!; // already List<Product>
 
           return GridView.builder(
             padding: const EdgeInsets.all(10),
@@ -35,26 +35,21 @@ class ShopPage extends StatelessWidget {
             ),
             itemCount: products.length,
             itemBuilder: (context, index) {
-              final product = products[index].data() as Map<String, dynamic>;
-              final id = products[index].id;
+              final product = products[index];
 
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ProductDetailsPage(
-                        title: product['title'] ?? '',
-                        price: product['price'] ?? '',
-                        image: product['image'] ?? '',
-                        description: product['description'] ?? '',
-                      ),
+                      builder: (_) => ProductDetailsPage(product: product),
                     ),
                   );
                 },
                 child: Card(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 4,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +60,7 @@ class ShopPage extends StatelessWidget {
                             top: Radius.circular(12),
                           ),
                           child: Image.network(
-                            product['image'] ?? '',
+                            product.image, // 👈 trimmed & safe
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (ctx, error, stack) =>
@@ -76,9 +71,11 @@ class ShopPage extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          product['title'] ?? '',
+                          product.title,
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -86,10 +83,11 @@ class ShopPage extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: Text(
-                          "₹${product['price'] ?? ''}",
+                          "₹${product.price}",
                           style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600),
+                            color: Colors.green,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],

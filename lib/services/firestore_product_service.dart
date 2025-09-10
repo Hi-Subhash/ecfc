@@ -1,26 +1,31 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/product_model.dart';
 
 class FirestoreProductService {
-  final CollectionReference productsCollection =
+  final CollectionReference _productCollection =
   FirebaseFirestore.instance.collection('products');
 
-  // Create Product
-  Future<void> addProduct(Map<String, dynamic> product) async {
-    await productsCollection.add(product);
+  // 🔹 Stream all products as List<Product>
+  Stream<List<Product>> getProducts() {
+    return _productCollection.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Product.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+    });
   }
 
-  // Read Products (Realtime)
-  Stream<QuerySnapshot> getProducts() {
-    return productsCollection.snapshots();
+  // 🔹 Add new product
+  Future<void> addProduct(Product product) async {
+    await _productCollection.add(product.toMap());
   }
 
-  // Update Product
-  Future<void> updateProduct(String id, Map<String, dynamic> product) async {
-    await productsCollection.doc(id).update(product);
+  // 🔹 Update product
+  Future<void> updateProduct(String id, Product product) async {
+    await _productCollection.doc(id).update(product.toMap());
   }
 
-  // Delete Product
+  // 🔹 Delete product
   Future<void> deleteProduct(String id) async {
-    await productsCollection.doc(id).delete();
+    await _productCollection.doc(id).delete();
   }
 }
