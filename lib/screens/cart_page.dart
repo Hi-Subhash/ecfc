@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/cart_service.dart';
+import 'checkout_screen.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
 
+  @override
+  _CartPageState createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartService>(context);
@@ -18,7 +24,12 @@ class CartPage extends StatelessWidget {
         itemBuilder: (context, index) {
           final product = cart.items[index];
           return ListTile(
-            leading: Image.network(product.image, width: 50, height: 50, fit: BoxFit.cover),
+            leading: Image.network(
+              product.image,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
             title: Text(product.title),
             subtitle: Text("₹${product.price}"),
             trailing: IconButton(
@@ -36,18 +47,35 @@ class CartPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(
           onPressed: () {
-            // Checkout logic
+            /// ✅ Navigate to Checkout Page
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CheckoutScreen(
+                  cartItems: cart.items
+                      .map((p) => {
+                    "name": p.title,
+                    "price": p.price,
+                    "image": p.image,
+                  })
+                      .toList(),
+                  totalAmount: cart.totalPrice,
+                ),
+              ),
+            );
+
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Proceeding to Checkout...")),
             );
           },
-          child: Text("Checkout (₹${cart.totalPrice.toStringAsFixed(2)})"),
+          child: Text(
+            "Checkout (₹${cart.totalPrice.toStringAsFixed(2)})",
+          ),
         ),
       ),
     );
   }
 }
-
 
 
 
