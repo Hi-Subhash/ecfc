@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 // These three files should live in the same folder: lib/screens/
 import 'design_page.dart';
+import 'order_history_screen.dart';
 import 'profile_page.dart';
 import 'notifications_page.dart';
 import 'category_page.dart';
@@ -69,97 +70,110 @@ class _CfcHomePageState extends State<CfcHomePage>
       builder: (_) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Wrap(
-            runSpacing: 8,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.home_rounded),
-                title: const Text('Home'),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_outline_rounded),
-                title: const Text('Profile'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfilePage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.notifications_none_rounded),
-                title: const Text('Notifications'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const NotificationsPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.shopping_cart_rounded),
-                title: const Text('Cart'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CartPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.login),
-                title: const Text('Logout'),
-                onTap: () {
-                  Navigator.pop(context); // Close the modal bottom sheet first
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext dialogContext) {
-                      return AlertDialog(
-                        title: const Text('Confirm Logout'),
-                        content: const Text('Are you sure you want to sign out?'),
-                        actions: <Widget>[
-                          TextButton(
-                            child: const Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(dialogContext).pop(); // Close the dialog
-                            },
-                          ),
-                          TextButton(
-                            child: const Text('Logout'),
-                            onPressed: () {
-                              Navigator.of(dialogContext).pop(); // Close the dialog
-                              AuthService().signOut(); // Sign out the user
-                              // Optionally, navigate to a login screen or home screen after logout
-                              // For example, if you have a SignInPage:
-                              // Navigator.of(context).pushAndRemoveUntil(
-                              //   MaterialPageRoute(builder: (context) => const SignInPage()),
-                              //   (Route<dynamic> route) => false,
-                              // );
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.favorite, color: Colors.red),
-                title: const Text('Wishlist'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const WishlistPage()),
-                  );
-                },
-              ),
+          child: SingleChildScrollView(
+            child: Wrap(
+              runSpacing: 8,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.home_rounded),
+                  title: const Text('Home'),
+                  onTap: () => Navigator.pop(context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.person_outline_rounded),
+                  title: const Text('Profile'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ProfilePage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.notifications_none_rounded),
+                  title: const Text('Notifications'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const NotificationsPage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.history_outlined),
+                  title: const Text('Order History'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.shopping_cart_rounded),
+                  title: const Text('Cart'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CartPage()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.login),
+                  title: const Text('Logout'),
+                  onTap: () {
+                    Navigator.pop(context); // Close the modal bottom sheet first
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext dialogContext) {
+                        return AlertDialog(
+                          title: const Text('Confirm Logout'),
+                          content: const Text('Are you sure you want to sign out?'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Cancel'),
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(); // Close the dialog
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('Logout'),
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(); // Close the dialog
+                                AuthService().signOut(); // Sign out the user
+                                // Optionally, navigate to a login screen or home screen after logout
+                                // For example, if you have a SignInPage:
+                                // Navigator.of(context).pushAndRemoveUntil(
+                                //   MaterialPageRoute(builder: (context) => const SignInPage()),
+                                //   (Route<dynamic> route) => false,
+                                // );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.favorite, color: Colors.red),
+                  title: const Text('Wishlist'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const WishlistPage()),
+                    );
+                  },
+                ),
 
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -193,8 +207,8 @@ class _CfcHomePageState extends State<CfcHomePage>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withOpacity(0.02),
-                      Colors.white.withOpacity(0.00),
+                      Colors.white.withAlpha(5),
+                      Colors.white.withAlpha(0),
                     ],
                   ),
                 ),
@@ -310,9 +324,9 @@ class _GlassSearchBar extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5                  ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.06),
+            color: Colors.white.withAlpha(15),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withAlpha(26)),
           ),
           child: Row(
             children: [
@@ -363,7 +377,7 @@ class _PromoCard extends StatelessWidget {
                     Text(
                       'AI-assisted demand prediction and 3D visualization for your custom fashion.',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withAlpha(217),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -424,7 +438,7 @@ class _CategoryChips extends StatelessWidget {
           onTap: () => onTapCategory?.call(cats[i]),
           child: _GlassChip(label: cats[i],),
         ),
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemCount: cats.length,
       ),
     );
@@ -504,7 +518,7 @@ class _FeaturedCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     'Limited edition pieces generated from community moodboards.',
-                    style: TextStyle(color: Colors.white.withOpacity(0.85)),
+                    style: TextStyle(color: Colors.white.withAlpha(217)),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -556,11 +570,11 @@ class _GlassCard extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            color: Colors.white.withOpacity(0.06),
-            border: Border.all(color: Colors.white.withOpacity(0.10)),
+            color: Colors.white.withAlpha(15),
+            border: Border.all(color: Colors.white.withAlpha(26)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withAlpha(89),
                 blurRadius: 24,
                 spreadRadius: 2,
               )
@@ -591,8 +605,8 @@ class _GlassButton extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: Colors.white.withOpacity(0.07),
-              border: Border.all(color: Colors.white.withOpacity(0.10)),
+              color: Colors.white.withAlpha(18),
+              border: Border.all(color: Colors.white.withAlpha(26)),
             ),
             child: child,
           ),
@@ -615,9 +629,9 @@ class _GlassChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.06),
+            color: Colors.white.withAlpha(15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.10)),
+            border: Border.all(color: Colors.white.withAlpha(26)),
           ),
           child: Text(label),
         ),
@@ -649,7 +663,7 @@ class _LiquidBackgroundPainter extends CustomPainter {
     // Animated blobs (metaball-ish illusion with blur)
     final blobs = [
       _Blob(
-        color: const Color(0xFF7C3AED).withOpacity(0.35),
+        color: const Color(0xFF7C3AED).withAlpha(89),
         baseX: size.width * 0.2,
         baseY: size.height * 0.3,
         r: size.shortestSide * 0.28,
@@ -658,7 +672,7 @@ class _LiquidBackgroundPainter extends CustomPainter {
         dy: 30,
       ),
       _Blob(
-        color: const Color(0xFF06B6D4).withOpacity(0.35),
+        color: const Color(0xFF06B6D4).withAlpha(89),
         baseX: size.width * 0.75,
         baseY: size.height * 0.25,
         r: size.shortestSide * 0.24,
@@ -667,7 +681,7 @@ class _LiquidBackgroundPainter extends CustomPainter {
         dy: 20,
       ),
       _Blob(
-        color: const Color(0xFFFF6B6B).withOpacity(0.30),
+        color: const Color(0xFFFF6B6B).withAlpha(77),
         baseX: size.width * 0.6,
         baseY: size.height * 0.8,
         r: size.shortestSide * 0.36,

@@ -1,12 +1,14 @@
 // lib/models/product_model.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Product {
   final String id;
   final String title;
   final String description;
-  final String image;
+  final String? image;
   final double price;
   final String category;
+  final DateTime? createdAt; // ✅ add createdAt field in model
 
   Product({
     required this.id,
@@ -15,6 +17,7 @@ class Product {
     required this.image,
     required this.price,
     required this.category,
+    this.createdAt,
   });
 
   /// Factory method to create Product from Firestore document
@@ -23,9 +26,10 @@ class Product {
       id: docId,
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      image: (data['image'] ?? '').toString().trim(), // ✅ trims URL safely
+      image: (data['image'] ?? '').toString().trim(),
       price: _toDouble(data['price']),
       category: data['category'] ?? '',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(), // ✅ convert timestamp
     );
   }
 
@@ -37,6 +41,7 @@ class Product {
       'image': image,
       'price': price,
       'category': category,
+      'createdAt': FieldValue.serverTimestamp(), // ✅ always set timestamp
     };
   }
 
@@ -49,44 +54,3 @@ class Product {
     return 0.0;
   }
 }
-
-
-
-
-
-// class Product {
-//   final String id;
-//   final String title;
-//   final String description;
-//   final String image;
-//   final String price;
-//
-//   Product({
-//     required this.id,
-//     required this.title,
-//     required this.description,
-//     required this.image,
-//     required this.price,
-//   });
-//
-//   // Factory method to create Product from Firestore document
-//   factory Product.fromFirestore(Map<String, dynamic> data, String docId) {
-//     return Product(
-//       id: docId,
-//       title: data['title'] ?? '',
-//       description: data['description'] ?? '',
-//       image: (data['image'] ?? '').toString().trim(), // 👈 trims URL safely
-//       price: data['price'] ?? '0',
-//     );
-//   }
-//
-//   // Convert Product to Map (for uploading to Firestore)
-//   Map<String, dynamic> toMap() {
-//     return {
-//       'title': title,
-//       'description': description,
-//       'image': image,
-//       'price': price,
-//     };
-//   }
-// }

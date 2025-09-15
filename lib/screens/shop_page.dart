@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/firestore_product_service.dart';
 import 'add_product_page.dart';
 import 'product_details_page.dart';
-import '../models/product_model.dart'; // 👈 Product model
+import '../models/product_model.dart'; // ✅ Product model
 
 class ShopPage extends StatelessWidget {
   const ShopPage({super.key});
@@ -13,7 +13,7 @@ class ShopPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Shop (Firestore)")),
-      body: StreamBuilder<List<Product>>( // 👈 FIX: use List<Product>
+      body: StreamBuilder<List<Product>>( // ✅ List<Product>
         stream: firestoreService.getProducts(), // already returns List<Product>
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -23,7 +23,7 @@ class ShopPage extends StatelessWidget {
             return const Center(child: Text("No Products Found"));
           }
 
-          final products = snapshot.data!; // already List<Product>
+          final products = snapshot.data!;
 
           return GridView.builder(
             padding: const EdgeInsets.all(10),
@@ -54,17 +54,26 @@ class ShopPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ✅ Safe image handling
                       Expanded(
                         child: ClipRRect(
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(12),
                           ),
-                          child: Image.network(
-                            product.image, // 👈 trimmed & safe
+                          child: product.image != null &&
+                              product.image!.isNotEmpty
+                              ? Image.network(
+                            product.image!,
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (ctx, error, stack) =>
                             const Icon(Icons.broken_image, size: 40),
+                          )
+                              : Container(
+                            width: double.infinity,
+                            color: Colors.grey.shade300,
+                            child: const Icon(Icons.image_not_supported,
+                                size: 40),
                           ),
                         ),
                       ),
@@ -81,7 +90,8 @@ class ShopPage extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        padding:
+                        const EdgeInsets.symmetric(horizontal: 8.0),
                         child: Text(
                           "₹${product.price}",
                           style: const TextStyle(
@@ -102,7 +112,8 @@ class ShopPage extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddProductPage()),
+            MaterialPageRoute(
+                builder: (context) => const AddProductPage()),
           );
         },
         child: const Icon(Icons.add),

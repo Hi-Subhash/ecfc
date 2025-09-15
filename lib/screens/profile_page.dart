@@ -155,7 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   backgroundImage: data?['photoUrl'] != null
                       ? NetworkImage(data!['photoUrl'])
                       : const AssetImage('assets/default_avatar.png')
-                          as ImageProvider,
+                  as ImageProvider,
                 ),
               ),
               const SizedBox(height: 20),

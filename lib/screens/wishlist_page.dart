@@ -1,49 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/wishlist_service.dart';
-import '../models/product_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WishlistPage extends StatelessWidget {
   const WishlistPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final wishlist = Provider.of<WishlistService>(context);
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text("Please login to view wishlist")),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text("My Wishlist")),
-      body: wishlist.items.isEmpty
-          ? const Center(child: Text("Your wishlist is empty ❤️"))
-          : ListView.builder(
-        itemCount: wishlist.items.length,
-        itemBuilder: (context, index) {
-          final Product product = wishlist.items[index]; // ✅ Product object
-          return Card(
-            margin: const EdgeInsets.all(8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ListTile(
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  product.image,
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  errorBuilder: (ctx, error, stack) =>
-                  const Icon(Icons.broken_image, size: 40),
-                ),
-              ),
-              title: Text(product.title),
-              subtitle: Text("₹${product.price}"),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  wishlist.removeItem(product); // ✅ pass Product
-                },
-              ),
-            ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection("wishlist")
+            .where("userId", isEqualTo: user.uid) // ✅ filter per user
+            // .orderBy("createdAt", descending: true) // newest first
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("No favorites yet ❤️"));
+          }
+          if (snapshot.hasData) {
+            debugPrint("🔥 Wishlist docs count: ${snapshot.data!.docs.length}");
+            for (var doc in snapshot.data!.docs) {
+              debugPrint("Doc: ${doc.data()}");
+            }
+          }
+
+
+          final favorites = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: favorites.length,
+            itemBuilder: (context, index) {
+              final fav = favorites[index].data() as Map<String, dynamic>;
+
+              return ListTile(
+                leading: Image.network(fav['image'], width: 50, height: 50, fit: BoxFit.cover),
+                title: Text(fav['name']),
+                subtitle: Text("₹${fav['price']}"),
+                trailing: const Icon(Icons.favorite, color: Colors.red),
+              );
+            },
           );
         },
       ),
@@ -51,51 +59,3 @@ class WishlistPage extends StatelessWidget {
   }
 }
 
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import '../services/wishlist_service.dart';
-//
-// class WishlistPage extends StatelessWidget {
-//   const WishlistPage({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final wishlist = Provider.of<WishlistService>(context);
-//
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("My Wishlist")),
-//       body: wishlist.items.isEmpty
-//           ? const Center(child: Text("Your wishlist is empty ❤️"))
-//           : ListView.builder(
-//         itemCount: wishlist.items.length,
-//         itemBuilder: (context, index) {
-//           final item = wishlist.items[index];
-//           return Card(
-//             margin: const EdgeInsets.all(8),
-//             shape: RoundedRectangleBorder(
-//                 borderRadius: BorderRadius.circular(16)),
-//             child: ListTile(
-//               leading: ClipRRect(
-//                 borderRadius: BorderRadius.circular(8),
-//                 child: Image.network(item['image'],
-//                     width: 60, height: 60, fit: BoxFit.cover),
-//               ),
-//               title: Text(item['title']),
-//               subtitle: Text("\$${item['price']}"),
-//               trailing: IconButton(
-//                 icon: const Icon(Icons.delete, color: Colors.red),
-//                 onPressed: () {
-//                   wishlist.removeItem(item);
-//                 },
-//               ),
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }

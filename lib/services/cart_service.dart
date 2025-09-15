@@ -1,52 +1,118 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import '../models/product_model.dart';
+import '../models/product_model.dart'; // Corrected path assuming models is a sibling to services
 
 class CartService with ChangeNotifier {
-  final List<Product> _items = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  List<Product> get items => _items;
+  // Public getter for FirebaseAuth instance
+  FirebaseAuth get firebaseAuth => _auth;
 
-  void addItem(Product product) {
-    _items.add(product);
-    notifyListeners();
+  String? get _userId => _auth.currentUser?.uid;
+
+  CollectionReference<Map<String, dynamic>>? _userCartItemsCollection() {
+    final userId = _userId;
+    if (userId == null) return null;
+    return _firestore.collection('carts').doc(userId).collection('items');
   }
 
-  void removeItem(Product product) {
-    _items.remove(product);
-    notifyListeners();
+  Future<void> addItem(Product product, {int quantity = 1}) async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint("User not logged in. Cannot add to cart.");
+      return;
+    }
+
+    final cartItemsCollection = _userCartItemsCollection();
+    if (cartItemsCollection == null) return;
+
+    final querySnapshot = await cartItemsCollection
+        .where('productId', isEqualTo: product.id)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      await doc.reference.update({
+        'quantity': doc.data()['quantity'] + quantity,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Data to be stored in the cart item document in Firestore
+      Map<String, dynamic> cartItemData = {
+        'productId': product.id,
+        'title': product.title,
+        'price': product.price,
+        'image': product.image,
+        'quantity': quantity,
+        'addedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      await cartItemsCollection.add(cartItemData);
+    }
+    // notifyListeners(); // Only if non-stream based UI needs updates
   }
 
-  void clearCart() {
-    _items.clear();
-    notifyListeners();
+  Future<void> removeItem(String cartItemDocId) async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint("User not logged in. Cannot remove item.");
+      return;
+    }
+    final cartItemsCollection = _userCartItemsCollection();
+    if (cartItemsCollection == null) return;
+
+    await cartItemsCollection.doc(cartItemDocId).delete();
+    // notifyListeners();
   }
 
-  double get totalPrice {
-    return _items.fold(0, (sum, item) => sum + item.price);
+  Future<void> updateItemQuantity(String cartItemDocId, int newQuantity) async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint("User not logged in. Cannot update quantity.");
+      return;
+    }
+    final cartItemsCollection = _userCartItemsCollection();
+    if (cartItemsCollection == null) return;
+
+    if (newQuantity <= 0) {
+      await removeItem(cartItemDocId);
+    } else {
+      await cartItemsCollection.doc(cartItemDocId).update({
+        'quantity': newQuantity,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    // notifyListeners();
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>>? getCartItemsStream() {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint("User not logged in. Cannot get cart stream.");
+      return Stream.empty();
+    }
+    return _userCartItemsCollection()?.orderBy('addedAt', descending: true).snapshots();
+  }
+
+  Future<void> clearCart() async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint("User not logged in. Cannot clear cart.");
+      return;
+    }
+    final cartItemsCollection = _userCartItemsCollection();
+    if (cartItemsCollection == null) return;
+
+    final WriteBatch batch = _firestore.batch();
+    final snapshot = await cartItemsCollection.get();
+    for (var doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+    // notifyListeners();
+  }
 }
-
-
-
-
-// import 'package:flutter/material.dart';
-//
-// class CartService extends ChangeNotifier {
-//   final List<Map<String, dynamic>> _items = [];
-//
-//   List<Map<String, dynamic>> get items => _items;
-//
-//   void addItem(Map<String, dynamic> product) {
-//     _items.add(product);
-//     notifyListeners();
-//   }
-//
-//   void removeItem(int index) {
-//     _items.removeAt(index);
-//     notifyListeners();
-//   }
-//
-//   double get totalPrice =>
-//       _items.fold(0, (sum, item) => sum + double.parse(item['price'].toString()));
-// }
