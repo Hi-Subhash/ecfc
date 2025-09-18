@@ -1,11 +1,22 @@
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import '../screens/order_success_screen.dart';
+import '../screens/order_failed_screen.dart';
+import '../main.dart'; // contains navigatorKey
 
 class CheckoutService {
   final _razorpay = Razorpay();
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+
+  CheckoutService() {
+    // ✅ Attach event listeners once
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
 
   void openCheckout(double amount, List<Map<String, dynamic>> items) {
     var options = {
@@ -19,23 +30,16 @@ class CheckoutService {
       }
     };
 
+    // ✅ Store items & amount temporarily for callback
+    _checkoutItems = items;
+    _checkoutAmount = amount;
+
     _razorpay.open(options);
-
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS,
-            (PaymentSuccessResponse response) {
-          _createOrder(items, amount, "Razorpay", "Success", response.paymentId);
-        });
-
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR,
-            (PaymentFailureResponse response) {
-          _createOrder(items, amount, "Razorpay", "Failed", null);
-        });
-
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET,
-            (ExternalWalletResponse response) {
-          // handle wallet payments
-        });
   }
+
+  // temporary storage
+  List<Map<String, dynamic>> _checkoutItems = [];
+  double _checkoutAmount = 0.0;
 
   Future<void> _createOrder(List<Map<String, dynamic>> items, double amount,
       String method, String status, String? paymentId) async {
@@ -50,20 +54,60 @@ class CheckoutService {
     });
   }
 
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    // Save order in Firestore and get doc reference
+    // Ensure each item has full details
+    final orderItems = _checkoutItems.map((item) {
+      return {
+        "productId": item["productId"],
+        "name": item["name"],         // ✅ now included
+        "imageUrl": item["imageUrl"], // ✅ now included
+        "price": item["price"],
+        "qty": item["qty"],
+      };
+    }).toList();
+
+    final docRef = await _firestore.collection("orders").add({
+      "userId": _auth.currentUser?.uid,
+      "items": orderItems, // ✅ save with details
+      "totalAmount": _checkoutAmount,
+      "paymentMethod": "Razorpay",
+      "paymentStatus": "Success",
+      "paymentId": response.paymentId,
+      "createdAt": FieldValue.serverTimestamp()
+    });
+
+    // ✅ Navigate to success screen with Firestore orderId
+    navigatorKey.currentState?.pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => OrderSuccessScreen(
+          orderDocId: docRef.id, // pass Firestore doc id
+        ),
+      ),
+    );
+  }
+
+
+  void _handlePaymentError(PaymentFailureResponse response) async {
+    await _createOrder(
+        _checkoutItems, _checkoutAmount, "Razorpay", "Failed", null);
+
+    // ✅ Navigate to failed screen
+    navigatorKey.currentState?.pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => OrderFailedScreen(
+          code: response.code,
+          message: response.message ?? "Unknown error",
+        ),
+      ),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    debugPrint("External Wallet Selected: ${response.walletName}");
+  }
+
   void dispose() {
     _razorpay.clear();
   }
 }
-
-//
-// Future<void> createCodOrder(
-//     List<Map<String, dynamic>> items, double amount) async {
-//   await _firestore.collection("orders").add({
-//     "userId": _auth.currentUser?.uid,
-//     "items": items,
-//     "totalAmount": amount,
-//     "paymentMethod": "COD",
-//     "paymentStatus": "Pending",
-//     "createdAt": FieldValue.serverTimestamp()
-//   });
-// }
