@@ -91,6 +91,17 @@ class _CfcHomePageState extends State<CfcHomePage>
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.shopping_cart_rounded),
+                  title: const Text('Cart'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CartPage()),
+                    );
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.notifications_none_rounded),
                   title: const Text('Notifications'),
                   onTap: () {
@@ -102,6 +113,17 @@ class _CfcHomePageState extends State<CfcHomePage>
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.favorite, color: Colors.red),
+                  title: const Text('Wishlist'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const WishlistPage()),
+                    );
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.history_outlined),
                   title: const Text('Order History'),
                   onTap: () {
@@ -109,17 +131,6 @@ class _CfcHomePageState extends State<CfcHomePage>
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.shopping_cart_rounded),
-                  title: const Text('Cart'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const CartPage()),
                     );
                   },
                 ),
@@ -160,18 +171,6 @@ class _CfcHomePageState extends State<CfcHomePage>
                     );
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.favorite, color: Colors.red),
-                  title: const Text('Wishlist'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const WishlistPage()),
-                    );
-                  },
-                ),
-
               ],
             ),
           ),
